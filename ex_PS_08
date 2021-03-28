@@ -1,0 +1,44 @@
+#Adres do otwarcia pliku
+$DocPath = 'C:\temp\test.docx'
+ 
+#Open Word document
+$SearchArray = @('1. First Name:','2. Last Name:','7. Job Title:','8. Manager/Supervisor','User Name:')
+$Word = New-Object -ComObject Word.Application
+$Document = $Word.Documents.Open($DocPath)
+$CSVInfo = $Document.Paragraphs | ForEach-Object {
+    foreach ($SearchText in $SearchArray) {
+        $_.Range.Text | Where-Object {$_ -match $SearchText} | ForEach-Object {
+            $_ -split ':' | Select-Object -Last 1
+        }
+    }
+}
+ 
+#All contents of Word Doc with spaces removed
+$Trim = $CSVInfo.trim()
+
+#Zamyka dokument
+$Word.Application.ActiveDocument.Close()
+ 
+#New user information
+$Ufirstname = $Trim | select-object -Index 0
+$Ulastname = $Trim | select-object -Index 1
+$UDetailedName= $Ulastname + ", " + $Ufirstname
+$Usam = $Ufirstname.Substring(0,1) + $Ulastname
+$UPN = $Ufirstname + "." + $Ulastname + "@domain.com"
+$Password = "Password"
+ 
+#Manger Name
+$mname = ($trim | Select-Object -Index 3).split(" ")
+$Mfirstname = $mname | select-object -Index 0
+$Mlastname = $mname | select-object -Index 1
+$Msam = $Mfirstname.Substring(0,1) + $Mlastname
+ 
+#User to copy group membership from
+$cname = ($trim | Select-Object -Index 4).split(" ")
+$Cfirstname = $cname | select-object -Index 0
+$Clastname = $cname | select-object -Index 1
+$Csam = $Cfirstname.Substring(0,1) + $Clastname
+$ou = (get-aduser -Identity $Csam -Properties * | Select -ExpandProperty distinguishedname).split(",",3) | Select -Last 1
+ 
+#Job Title
+$jtitle = $Trim | Select-Object -index 2
