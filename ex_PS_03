@@ -1,0 +1,21 @@
+# Dodaje nowe wartości do excela
+
+$employees =@(
+    [pscustomobject]@{
+        FirstName = 'nowy test1'
+        LastName = 'nowy test2'
+        UserName = 'nowy test3'
+        }
+        [pscustomobject]@{
+        FirstName = 'nowy test4'
+        LastName = 'nowy test5'
+        UserName = 'nowy test6'
+        }
+        [pscustomobject]@{
+        FirstName = 'nowy test7'
+        LastName = 'nowy test8'
+        UserName = 'nowy test9'
+        }
+)
+$employees | Export-Csv -Path $thePath -Append
+Import-Csv $thePath
