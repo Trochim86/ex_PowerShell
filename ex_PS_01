@@ -1,0 +1,9 @@
+<# zmienna do której będzie tworzona nowa aplikcja #>
+
+$word = New-Object -ComObject Word.application
+
+<#Adres dokumentu#>
+
+$documentPath = D:\testDocument.docx
+
+$document = $word.Documents.Open($documentPath)
