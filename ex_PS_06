@@ -1,0 +1,20 @@
+# Wyszukiwanie określonego słowa w pliku docx
+
+# Funkcja otwiera program word
+$word = New-Object -ComObject Word.Application
+# Podajemy lokalizacje
+$source = 'C:\temp'
+# Zmienna szuka plikwo docx pod adresm $source
+$docs = Get-ChildItem -Path $source | Where-Object {$_.Name -match '.docx'}
+
+#loop dla kazdego slowa w pliku "Przemek "
+foreach ($doc in $docs)
+{
+    if ($word.Documents.Open($doc.FullName).Content.Find.Execute('Przemek'))
+    {
+    # coś jak print() lub WriteLine()
+
+        Write-Host "$doc Znalezione słowo Przemek'"
+    }
+    $word.Application.ActiveDocument.Close()
+}
