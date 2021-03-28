@@ -1,0 +1,25 @@
+#Uruchamia instancje aplikacji word
+$Word=NEW-Object –comobject Word.Application
+
+# ukrywa uruchimienie pliku
+$Word.visible = $False
+
+#Wyszukuje litę plików docx
+Get-ChildItem "c:\temp" -file -Filter "*.docx" | %{
+
+$Filename=$_.FullName
+
+#Otwiera i szuka 
+$Document=$Word.documents.open($Filename, $false, $true)
+#Przypisanie zmiennej do zawartości
+$range = $document.content
+
+#Jeśli True drukuje info i adress pliku
+If($range.Text -like "*Przemek*"){
+    $Filename
+}
+    Write-Host "$range Znalezione słowo Przemek'"
+
+$word.Application.ActiveDocument.Close()
+
+}
