@@ -1,0 +1,60 @@
+# Tworzy obiekt Word
+
+$NowyWord = New-Object -ComObject Word.Application
+
+# Pyta o lokalizajce pliku
+
+$LokPliku = Read-Host “Podaj lokalizajce dokumenty”
+
+# Pyta o lokalizajce dla pliku docelowego
+
+$FinalLok = Read-Host “Podaj lokalizacje docelową”
+
+#------------------------------------------------------#
+
+# Otwiera plik we wskazanej lokalizacji
+
+$OtwDok = $NowyWord.Documents.Open($LokPliku)
+
+$Tabela = $Tabela.Tables.Item(1) # Wstawić nazwę tabeli ?
+
+$TabKol = $Tabela.Columns.Count
+
+$TabWie = $Tabela.Rows.Count
+
+# PRZECHODZENIE PRZEZ KOLUMNY I WIERSZE
+
+for ($r = 1 ;$r -le $TabWie ; $r ++ ) {
+
+   for ($c  = 1 ;$c -le $TableKol ; $c ++ ) {
+        Write-host $r "x" $c
+
+      [array]$content += $Tab.Cell($r ,$c ).Range.Text
+        Write-host $content
+
+   }
+
+}
+$OtwDok.Close()
+$NowyWord.Quit()
+
+#------------------------------------------------------#
+
+# Export danych z tabeli do pliku txt, możliwość zastosowania funkcji: ConvertTo-Csv
+
+$Output = $content | Out-String
+
+$Output | Out-File D:\Test2\test2ptxt.txt
+
+# import pliku txt oraz export do csv
+
+Import-CSV D:\Test2\test2ptxt.txt -Delimiter “`t”| Export-CSV $FinalLok -NoTypeInformation
+
+$rc = [System.Runtime.Interopservices.Marshal]::ReleaseComObject($NowyWord)
+
+#Usuwanie tymczasowego pliku txt
+
+del D:\Test2\test2ptxt.txt
+
+#Resetuje zmienną
+$content = $NULL
