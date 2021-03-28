@@ -1,0 +1,11 @@
+<#Tworzy pliki csv i dodaje 3 warto#>
+[string]$thePath = "D:\Plik_testowy.csv"
+Add-Content -Path $thePath -Value '"FirstName","LastName","UserName"'
+$employees = @(
+    '"text1","text2","tekst3"'
+    '"text4","text5","tekst6"'
+    '"text6","text8","tekst9"'
+
+)
+$employees | foreach { Add-Content -Path $thePath -Value $_}
+Import-Csv $thePath
