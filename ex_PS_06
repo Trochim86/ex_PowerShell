@@ -1,0 +1,14 @@
+<#Otwiera plik word i czyta#>
+
+
+<#Otwiera aplikacje wordd#>
+
+$Word = New-Object -ComObject Word.Application
+
+<#Lokalizajca pliku do otwarcia #>
+$Document = $Word.Documents.Open('C:\temp\test.docx')
+
+<#Wczytuje zawartość pliku #>
+$Document.Paragraphs | ForEach-Object {
+    $_.Range.Text
+}
