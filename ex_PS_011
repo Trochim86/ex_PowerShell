@@ -1,0 +1,29 @@
+$objWord = New-Object -Com Word.Application
+
+$LokPliku = Read-Host “Podaj lokalizajce dokumenty”
+
+
+#$filename = 'C:\temp\PL1210230-CMP-Att 16 Request for Information.docx'
+$objDocument = $objWord.Documents.Open($LokPliku)
+
+$LETable = $objDocument.Tables.Item(1)
+$LETableCols = $LETable.Columns.Count
+$LETableRows = $LETable.Rows.Count
+
+
+Write-output "Starting to write... "
+
+for($r=1; $r -le $LETableRows; $r++) {
+    for($c=1; $c -le $LETableCols; $c++) {
+        Write-host $r "x" $c
+        $content = $LETable.Cell($r,$c).Range.Text
+        Write-host $content
+    }
+}
+[string]$thePath = "‪C:\temp\Plik_testowy.csv"
+Add-Content -Path $thePath -Value $content
+
+
+
+$objDocument.Close()
+$objWord.Quit()
