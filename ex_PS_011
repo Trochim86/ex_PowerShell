@@ -27,3 +27,52 @@ Add-Content -Path $thePath -Value $content
 
 $objDocument.Close()
 $objWord.Quit()
+
+
+-------------------------------------------------
+
+
+
+$objWord = New-Object -Com Word.Application
+
+$LokPliku = Read-Host “Podaj lokalizajce dokumenty dock”
+
+# Pyta o lokalizajce dla pliku docelowego
+
+$FinalLok = Read-Host “Podaj lokalizacje exportu danych oraz nazwę pliku”
+
+
+#$filename = 'C:\temp\PL1210230-CMP-Att 16 Request for Information.docx'
+$objDocument = $objWord.Documents.Open($LokPliku)
+
+$LETable = $objDocument.Tables.Item(1)
+$LETableCols = $LETable.Columns.Count
+$LETableRows = $LETable.Rows.Count
+
+
+Write-output "Starting to write... "
+
+for($r=1; $r -le $LETableRows; $r++) {
+    for($c=1; $c -le $LETableCols; $c++) {
+        Write-host $r "x" $c
+        $content = $LETable.Cell($r,$c).Range.Text
+        Write-host $content
+    }
+}
+# Tworzy nowy plik excel
+New-Item -Path $FinalLok -ItemType File
+
+# Ścieżka wpisana na sztywno
+#$thePath = 'C:\temp\Plik_testowy.csv'
+
+# Dodawanie danych ze zmiennej do pliku excel
+#Add-Content -Path $FinalLok -Value $content
+
+Set-Content $FinalLok -Value $content
+
+# Czyta zawartość
+Get-Content $FinalLok 
+
+$objDocument.Close()
+$objWord.Quit()
+
