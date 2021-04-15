@@ -1,0 +1,23 @@
+function Copy-FileUsePath {
+[cmdletbinding()]
+    param(
+        [parameter(Mandatory=$true,Position=0)][string]$Path,
+        [parameter(Mandatory=$true,Position=1)][string]$Destination
+    )
+
+    $files = Get-ChildItem -Path $Path -Recurse -Include "*.???"
+    foreach ( $file in $files ) {
+        $discard = $Destination.Length
+        if( $Destination -notlike "*\" ) {
+            $discard++
+        }
+        $newFileName = $file.FullName.Replace('\', '_').Remove( 0, $discard )
+        $newFile = $Destination + '\' + $newFileName
+        Write-Verbose "Copy-Item -Path $file.fullname -Destination $newFile"
+        Copy-Item -Path $file.fullname -Destination $newFile
+    }
+}
+
+
+". .\Copy-FileUsePath.ps1
+Copy-FileUsePath -Path C:\12 -Destination C:\export"
