@@ -37,3 +37,6 @@ $Link.click()
 
 #$link = $doc.getElementsByTagName('a') | Where-Object {$_.href -match "`#r1r3"}
 #$Link.Click
+
+#$link = $ie.Document.getElementsByTagName('a') | ?{$_.textcontent -eq 'DLNSHCTM02'} 
+#$link.click()
