@@ -1,0 +1,726 @@
+
+Working with Excel using the ImportExcel Module
+The ImportExcel Module was started by Doug Finke b t and has consistently been updated with significant input from James O'Neill b t amongst others. ImportExcel enables automation of Excel workbooks using PowerShell and works with both Windows PowerShell and PowerShell Core
+
+Installation
+Lets start by installing it (we will also check that you have dbatools too!)
+
+In [2]:
+$Modules = 'ImportExcel','dbatools'
+foreach($Module in $Modules){
+    if(Get-Module $Module -ListAvailable -ErrorAction SilentlyContinue){
+        Write-Output "We will update the module $Module"
+        Update-Module $Module
+    } else {
+        Write-Output "We will install the module $Module"
+        Install-Module $Module -Scope CurrentUser
+    }
+}
+We will update the module ImportExcel
+We will update the module dbatools
+Listing the commands
+The module has a significant number of commands
+
+In [3]:
+Get-Command -Module ImportExcel
+CommandType     Name                                               Version    Source                                   
+-----------     ----                                               -------    ------                                   
+Alias           Convert-XlRangeToImage                             7.1.1      ImportExcel                              
+Alias           Export-ExcelSheet                                  7.1.1      ImportExcel                              
+Alias           New-ExcelChart                                     7.1.1      ImportExcel                              
+Alias           Set-Column                                         7.1.1      ImportExcel                              
+Alias           Set-Format                                         7.1.1      ImportExcel                              
+Alias           Set-Row                                            7.1.1      ImportExcel                              
+Alias           Use-ExcelData                                      7.1.1      ImportExcel                              
+Function        Add-ConditionalFormatting                          7.1.1      ImportExcel                              
+Function        Add-ExcelChart                                     7.1.1      ImportExcel                              
+Function        Add-ExcelDataValidationRule                        7.1.1      ImportExcel                              
+Function        Add-ExcelName                                      7.1.1      ImportExcel                              
+Function        Add-ExcelTable                                     7.1.1      ImportExcel                              
+Function        Add-PivotTable                                     7.1.1      ImportExcel                              
+Function        Add-Worksheet                                      7.1.1      ImportExcel                              
+Function        BarChart                                           7.1.1      ImportExcel                              
+Function        Close-ExcelPackage                                 7.1.1      ImportExcel                              
+Function        ColumnChart                                        7.1.1      ImportExcel                              
+Function        Compare-Worksheet                                  7.1.1      ImportExcel                              
+Function        Convert-ExcelRangeToImage                          7.1.1      ImportExcel                              
+Function        ConvertFrom-ExcelData                              7.1.1      ImportExcel                              
+Function        ConvertFrom-ExcelSheet                             7.1.1      ImportExcel                              
+Function        ConvertFrom-ExcelToSQLInsert                       7.1.1      ImportExcel                              
+Function        ConvertTo-ExcelXlsx                                7.1.1      ImportExcel                              
+Function        Copy-ExcelWorksheet                                7.1.1      ImportExcel                              
+Function        DoChart                                            7.1.1      ImportExcel                              
+Function        Expand-NumberFormat                                7.1.1      ImportExcel                              
+Function        Export-Excel                                       7.1.1      ImportExcel                              
+Function        Get-ExcelColumnName                                7.1.1      ImportExcel                              
+Function        Get-ExcelSheetInfo                                 7.1.1      ImportExcel                              
+Function        Get-ExcelWorkbookInfo                              7.1.1      ImportExcel                              
+Function        Get-HtmlTable                                      7.1.1      ImportExcel                              
+Function        Get-Range                                          7.1.1      ImportExcel                              
+Function        Get-XYRange                                        7.1.1      ImportExcel                              
+Function        Import-Excel                                       7.1.1      ImportExcel                              
+Function        Import-Html                                        7.1.1      ImportExcel                              
+Function        Import-UPS                                         7.1.1      ImportExcel                              
+Function        Import-USPS                                        7.1.1      ImportExcel                              
+Function        Invoke-Sum                                         7.1.1      ImportExcel                              
+Function        Join-Worksheet                                     7.1.1      ImportExcel                              
+Function        LineChart                                          7.1.1      ImportExcel                              
+Function        Merge-MultipleSheets                               7.1.1      ImportExcel                              
+Function        Merge-Worksheet                                    7.1.1      ImportExcel                              
+Function        New-ConditionalFormattingIconSet                   7.1.1      ImportExcel                              
+Function        New-ConditionalText                                7.1.1      ImportExcel                              
+Function        New-ExcelChartDefinition                           7.1.1      ImportExcel                              
+Function        New-ExcelStyle                                     7.1.1      ImportExcel                              
+Function        New-PivotTableDefinition                           7.1.1      ImportExcel                              
+Function        New-Plot                                           7.1.1      ImportExcel                              
+Function        New-PSItem                                         7.1.1      ImportExcel                              
+Function        Open-ExcelPackage                                  7.1.1      ImportExcel                              
+Function        PieChart                                           7.1.1      ImportExcel                              
+Function        Pivot                                              7.1.1      ImportExcel                              
+Function        Remove-Worksheet                                   7.1.1      ImportExcel                              
+Function        Select-Worksheet                                   7.1.1      ImportExcel                              
+Function        Send-SQLDataToExcel                                7.1.1      ImportExcel                              
+Function        Set-CellStyle                                      7.1.1      ImportExcel                              
+Function        Set-ExcelColumn                                    7.1.1      ImportExcel                              
+Function        Set-ExcelRange                                     7.1.1      ImportExcel                              
+Function        Set-ExcelRow                                       7.1.1      ImportExcel                              
+Function        Set-WorksheetProtection                            7.1.1      ImportExcel                              
+Function        Test-Boolean                                       7.1.1      ImportExcel                              
+Function        Test-Date                                          7.1.1      ImportExcel                              
+Function        Test-Integer                                       7.1.1      ImportExcel                              
+Function        Test-Number                                        7.1.1      ImportExcel                              
+Function        Test-String                                        7.1.1      ImportExcel                              
+Function        Update-FirstObjectProperties                       7.1.1      ImportExcel                              
+
+
+Start with something easy
+Let's start of by showing the power of PowerShell and the ImportExcel module
+
+First lets get the logins on an instance with dbatools, you can list them here and save the results in a notebook or you can copy the results and paste them into an email or somthing else, maybe Excel!
+
+In [4]:
+Get-DbaLogin -SqlInstance localhost | Format-Table
+ComputerName  InstanceName SqlInstance   Name                                LoginType CreateDate          LastLogin   
+------------  ------------ -----------   ----                                --------- ----------          ---------   
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP ##MS_PolicyEventProcessingLogin##    SqlLogin 24/09/2019 14:21:53             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP ##MS_PolicyTsqlExecutionLogin##      SqlLogin 24/09/2019 14:21:53             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP akamman                              SqlLogin 11/11/2020 16:32:30             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP alevy                                SqlLogin 11/11/2020 16:32:30             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP beardapp1                            SqlLogin 11/11/2020 16:32:30             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP beardapp2                            SqlLogin 11/11/2020 16:32:30             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP beardapp3                            SqlLogin 11/11/2020 16:32:30             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP beardapp4                            SqlLogin 11/11/2020 16:32:30             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP beardapp5                            SqlLogin 11/11/2020 16:32:30             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP beardapp6                            SqlLogin 11/11/2020 16:32:30             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP beardapp7                            SqlLogin 11/11/2020 16:32:30             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP beardapp8                            SqlLogin 11/11/2020 16:32:30             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP BEARD-DESKTOP\mrrob               WindowsUser 20/06/2020 14:00:33 20/02/202...
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP benji                                SqlLogin 11/11/2020 16:32:30             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP bweissman                            SqlLogin 11/11/2020 16:32:30             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP clemaire                             SqlLogin 11/11/2020 16:32:30             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP csilva                               SqlLogin 11/11/2020 16:32:30             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP fatherjack                           SqlLogin 11/11/2020 16:32:30             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP gsartori                             SqlLogin 11/11/2020 16:32:31             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP jamrtin                              SqlLogin 11/11/2020 16:32:31             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP NT AUTHORITY\SYSTEM               WindowsUser 20/06/2020 14:00:33             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP NT Service\MSSQLSERVER            WindowsUser 20/06/2020 14:00:33             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP NT SERVICE\SQLSERVERAGENT         WindowsUser 20/06/2020 14:00:34 18/02/202...
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP NT SERVICE\SQLTELEMETRY           WindowsUser 20/06/2020 14:00:34 20/02/202...
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP NT SERVICE\SQLWriter              WindowsUser 20/06/2020 14:00:33             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP NT SERVICE\Winmgmt                WindowsUser 20/06/2020 14:00:33             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP Reporting1                           SqlLogin 11/11/2020 16:32:31             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP Reporting2                           SqlLogin 11/11/2020 16:32:31             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP Reporting3                           SqlLogin 11/11/2020 16:32:31             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP Reporting4                           SqlLogin 11/11/2020 16:32:31             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP sa                                   SqlLogin 08/04/2003 09:10:35 20/02/202...
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP smelton                              SqlLogin 11/11/2020 16:32:31             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP sockfactory                          SqlLogin 24/06/2020 16:16:06             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP SockFactoryApp_User                  SqlLogin 11/11/2020 16:32:31             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP soneill                              SqlLogin 11/11/2020 16:32:31             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP sqladmin                             SqlLogin 11/11/2020 16:32:31             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP Support1                             SqlLogin 11/11/2020 16:32:31             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP Support2                             SqlLogin 11/11/2020 16:32:31             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP Support3                             SqlLogin 11/11/2020 16:32:31             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP Support4                             SqlLogin 11/11/2020 16:32:31             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP Support5                             SqlLogin 11/11/2020 16:32:31             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP Support6                             SqlLogin 11/11/2020 16:32:31             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP tboggiano                            SqlLogin 11/11/2020 16:32:31             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP thebeard                             SqlLogin 11/11/2020 16:32:31             
+BEARD-DESKTOP MSSQLSERVER  BEARD-DESKTOP wdurkin                              SqlLogin 11/11/2020 16:32:32             
+
+
+Of course, your user will want them in Excel!!
+
+With ImportExcel Module, it is easy to pipe the results from any command into an excel worksheet
+
+In [5]:
+Get-DbaLogin -SqlInstance localhost | Export-Excel -Path C:\temp\xlsx\Logins.xlsx
+Invoke-Item C:\temp\xlsx\Logins.xlsx
+Thats cool, .
+
+We will often autosize the results in Excel so that the columns fit. It would be good to be able to auto format with PowerShell. With the ImportExcel you can do that with the AutoSize parameter
+
+In [6]:
+Get-DbaLogin -SqlInstance localhost | Export-Excel -Path C:\temp\xlsx\Logins.xlsx -AutoSize
+Invoke-Item C:\temp\xlsx\Logins.xlsx
+ Thats neat but I want to be able to filter by the columns as well. You can use the -AutoFilter parameter for this
+
+In [7]:
+Get-DbaLogin -SqlInstance localhost | Export-Excel -Path C:\temp\xlsx\Logins.xlsx -AutoSize -AutoFilter
+Invoke-Item C:\temp\xlsx\Logins.xlsx
+To make it look a little nicer, I could name the worksheet and give the table a title. I want a title and to be able to name the worksheet and because I am lazy, I want it to just open with one line.
+
+You can use the -Title, -WorksheetName, and -Show parameters to achieve this.
+
+In [8]:
+Get-DbaLogin -SqlInstance localhost | Export-Excel -Path C:\temp\xlsx\Logins.xlsx -AutoSize -AutoFilter -Title "The Logins" -WorksheetName "Logins" -Show
+Hang on a minute, what happened there?
+
+It has created a new worksheet and added it onto the existing workbook but it made it the second one!
+
+Lets fix that with the MoveToStart parameter, We'll make the background yellow so its obvious and used the FreezeTopRow parameter to, well freeze the top row. I have also changed the code to use splatting which I think makes it easier to read.
+
+In [9]:
+$ExportExcelParams = @{
+    Path =  'C:\temp\xlsx\Logins.xlsx' 
+    AutoSize =  $true
+    AutoFilter =  $true
+    Title =  "The Logins" 
+    WorksheetName =  "Logins" 
+    MoveToStart =  $true
+    TitleBackgroundColor =  'yellow' 
+    FreezeTopRow =  $true
+    Show =  $true
+}
+Get-DbaLogin -SqlInstance localhost | Export-Excel @ExportExcelParams
+Use cases
+This is really neat, its a simple way of getting the results of any PowerShell command, quickly and easily into an Excel sheet for sorting.
+
+At the command line, you can make sure that you are getting the results that you need and then pipe those results into the Export-Excel command.
+
+Services
+So you could get the services like this.
+
+FreezeTopRow freezes the top row which is the title! We need to freeze the second row. To do this you use the FreezePane parameter and provide the rownumber and column number. In this case row 3 and column 0.
+
+In [10]:
+$ExportExcelParams = @{
+    Path =  'C:\temp\xlsx\Services.xlsx' 
+    AutoSize =  $true
+    AutoFilter =  $true
+    Title =  "Services on $Env:ComputerName" 
+    WorksheetName =  "Services" 
+    MoveToStart =  $true
+    TitleBackgroundColor =  'darkgray' 
+    FreezePane = 3,0
+    Show =  $true
+}
+Get-Service | Export-Excel @ExportExcelParams
+Processes
+Or the Processes like this. This takes a little minute
+
+In [ ]:
+$ExportExcelParams = @{
+    Path =  'C:\temp\xlsx\Processes.xlsx' 
+    AutoSize =  $true
+    AutoFilter =  $true
+    Title =  "Processes on $Env:ComputerName" 
+    WorksheetName =  "Processes" 
+    MoveToStart =  $true
+    TitleBackgroundColor =  'darkgray' 
+    FreezePane = 3,0
+    Show =  $true
+}
+Get-Process | Export-Excel @ExportExcelParams
+Event Logs
+You can do the same thing with Windows Event logs. This time you will add both Application and System Event Log entries into seperate worksheets
+
+In [11]:
+$ExportExcelParams = @{
+    Path = 'C:\temp\xlsx\EventLogs.xlsx'
+    AutoSize =  $true
+    AutoFilter =  $true
+    Title =  "Event Log on $Env:ComputerName" 
+    MoveToStart =  $true
+    TitleBackgroundColor =  'darkgray' 
+    FreezePane = 3,0
+}
+Get-WinEvent -LogName System -MaxEvents 100  | Export-Excel @ExportExcelParams  -WorksheetName "System" 
+Get-WinEvent -LogName Application -MaxEvents 100  | Export-Excel @ExportExcelParams  -WorksheetName "Application" -Show
+ SQL Error Logs
+In [12]:
+$ExportExcelParams = @{
+    Path =  'C:\temp\xlsx\SQLErrorLogs.xlsx' 
+    AutoSize =  $true
+    AutoFilter =  $true
+    Title =  "SQL Error Log" 
+    WorksheetName =  "SQL Error Log" 
+    MoveToStart =  $true
+    TitleBackgroundColor =  'darkgray' 
+    FreezePane = 3,0
+    Show =  $true
+}
+Get-DbaErrorLog -SqlInstance localhost  | Export-Excel  @ExportExcelParams
+How About doing it all in one workbook ?
+In [13]:
+$ExportExcelParams = @{
+    Path =  'C:\temp\xlsx\Incident.xlsx' 
+    AutoSize =  $true
+    AutoFilter =  $true
+    MoveToStart =  $true
+    FreezeTopRow = $true
+}
+
+Get-Service | Export-Excel @ExportExcelParams -WorksheetName "Services" 
+# Get-Process | Export-Excel @ExportExcelParams -WorksheetName "Processes" 
+'Get-Process' | Export-Excel @ExportExcelParams -WorksheetName "Processes" 
+Get-WinEvent -LogName System -MaxEvents 100  | Export-Excel @ExportExcelParams -WorksheetName "System" 
+Get-WinEvent -LogName Application -MaxEvents 100  | Export-Excel @ExportExcelParams -WorksheetName "Application" 
+Get-DbaErrorLog -SqlInstance localhost  | Export-Excel @ExportExcelParams -WorksheetName "SQL Error Logs" -Show
+More Information needed
+So thats useful but how about if we add a front page which gives some more information?
+
+In [14]:
+$SqlInstance = 'Beard-Desktop'
+$Date = Get-Date -Format yyyyMMdd
+$Directory = 'C:\temp\xlsx\'
+$ExcelFile = $Directory + $Date + '_Incident_For_' + $SqlInstance + '.xlsx'
+
+$ExportExcelParams = @{
+    Path =  $ExcelFile 
+    AutoSize =  $true
+    AutoFilter =  $true
+    MoveToStart =  $true
+    FreezeTopRow = $true
+}
+
+
+Get-Service | Export-Excel @ExportExcelParams -WorksheetName "Services" 
+'Get-Process' | Export-Excel @ExportExcelParams -WorksheetName "Processes" 
+Get-WinEvent -LogName System -MaxEvents 100  | Export-Excel @ExportExcelParams -WorksheetName "System" 
+Get-WinEvent -LogName Application -MaxEvents 100  | Export-Excel @ExportExcelParams -WorksheetName "Application" 
+Get-DbaErrorLog -SqlInstance localhost  | Export-Excel @ExportExcelParams -WorksheetName "SQL Error Logs" 
+
+$Excel = Open-ExcelPackage -Path $ExcelFile
+Add-Worksheet -ExcelPackage $Excel -WorksheetName 'Title' -MoveToStart | Out-Null
+
+$TitleSheet = $excel.Workbook.Worksheets['Title']
+$Date = (Get-Date).ToLongDateString()
+$TitleSheet.Cells["A1"].value = "This Worksheet shows the System Event Log, Application Event Log, Services,Processes and SQL Error Log for $sqlinstance at $Date "
+Set-ExcelRange -Worksheet $TitleSheet -Range "A:1" -Bold -FontSize 22 -Underline -UnderLineType Double
+
+Close-ExcelPackage $excel
+
+Write-Output "                ###############                  "
+Write-Output "        FileName is $ExcelFile            "
+Write-Output "                ###############                  "
+Write-Output ""
+
+Invoke-Item $ExcelFile
+                ###############                  
+        FileName is C:\temp\xlsx\20210220_Incident_For_Beard-Desktop.xlsx            
+                ###############                  
+
+Charts and Graphs and Pivot Tables
+In [15]:
+$Query = "SELECT Top 25000 PROD.Name, 
+OrdHead.OrderDate ,
+Details.OrderQty
+FROM Sales.SalesOrderDetail AS Details
+INNER JOIN Production.Product AS PROD ON Details.ProductID = PROD.ProductID
+INNER JOIN Sales.SalesOrderHeader AS OrdHead ON Details.SalesOrderID = OrdHead.SalesOrderID"
+$results = Invoke-DbaQuery -SqlInstance localhost -Database AdventureWorks2017 -Query $Query 
+$results | Export-Excel -Path C:\temp\xlsx\query.xlsx -Show
+Thats a bit annoying but it is due to the datatable object that is returned. We can fix that using Select * -ExcludeProperty ItemArray, RowError, RowState, Table, HasErrors
+
+In [16]:
+$Query = "SELECT Top 25000 PROD.Name, 
+OrdHead.OrderDate ,
+Details.OrderQty
+FROM Sales.SalesOrderDetail AS Details
+INNER JOIN Production.Product AS PROD ON Details.ProductID = PROD.ProductID
+INNER JOIN Sales.SalesOrderHeader AS OrdHead ON Details.SalesOrderID = OrdHead.SalesOrderID"
+$results = Invoke-DbaQuery -SqlInstance localhost -Database AdventureWorks2017 -Query $Query  |Select * -ExcludeProperty ItemArray, RowError, RowState, Table, HasErrors
+$results  | Export-Excel -Path C:\temp\xlsx\newquery.xlsx -Show
+Lets format it nicely again
+
+In [17]:
+$ExportExcelParams = @{
+    Path =  'C:\temp\xlsx\formattedquery.xlsx' 
+    WorksheetName = 'A Query'
+    TableName = 'BeardsAreAwesome'
+    TableStyle = 'Dark1'
+    AutoSize =  $true
+    AutoFilter =  $true
+    MoveToStart =  $true
+    FreezeTopRow = $true
+    Show = $true
+}
+$results | Export-Excel @ExportExcelParams
+Chart
+Of course, charts are interesting too.
+
+You can query a table, export the results to a table, and create a chart. We will also remove hte annoying Sheet1 too
+
+In [18]:
+$ExcelFilePath =  'C:\temp\xlsx\chartedquery.xlsx'
+
+$Query = "SELECT  
+YEAR(OrdHead.OrderDate) AS Year,
+SUM(Details.OrderQty) AS TotalSales
+FROM Sales.SalesOrderDetail AS Details
+INNER JOIN Production.Product AS PROD ON Details.ProductID = PROD.ProductID
+INNER JOIN Sales.SalesOrderHeader AS OrdHead ON Details.SalesOrderID = OrdHead.SalesOrderID
+GROUP BY YEAR(OrdHead.OrderDate)
+ORDER BY YEAR(OrdHead.OrderDate) 
+"
+$ExportExcelParams = @{
+    Path =  $ExcelFilePath 
+    WorksheetName = 'BeardsAreAwesome'
+    TableName = 'BeardsAreAwesome'
+    TableStyle = 'Dark1'
+    AutoSize =  $true
+    AutoFilter =  $true
+    MoveToStart =  $true
+    FreezeTopRow = $true
+    AutoNameRange = $true
+}
+
+$ChartDefinition = @{
+    Title = 'BeardyChart' 
+    ChartType = 'ColumnClustered' 
+    XRange = 'Year'  
+    YRange = 'TotalSales'  
+    Column = 4
+    NoLegend = $true
+}
+
+#Gather results
+$results = Invoke-DbaQuery -SqlInstance localhost -Database AdventureWorks2017 -Query $Query  |Select * -ExcludeProperty ItemArray, RowError, RowState, Table, HasErrors
+
+#export results to excel 
+$excel = $results | Export-Excel  @ExportExcelParams -PassThru
+
+Remove-Worksheet  -FullName $ExcelFilePath -WorksheetName 'Sheet1'
+#create chart defnition
+$chart = New-ExcelChartDefinition @ChartDefinition 
+# create and save excel
+Export-Excel -ExcelPackage $excel -ExcelChartDefinition $chart -WorksheetName 'BeardsAreAwesome' -Show
+WARNING: Could not find C:\temp\xlsx\chartedquery.xlsx
+I'm a DBA, I like doughnuts :-)
+
+In [19]:
+$ExcelFilePath =  'C:\temp\xlsx\DONUTSchartedquery.xlsx'
+
+$Query = "SELECT  
+YEAR(OrdHead.OrderDate) AS Year,
+SUM(Details.OrderQty) AS TotalSales
+FROM Sales.SalesOrderDetail AS Details
+INNER JOIN Production.Product AS PROD ON Details.ProductID = PROD.ProductID
+INNER JOIN Sales.SalesOrderHeader AS OrdHead ON Details.SalesOrderID = OrdHead.SalesOrderID
+GROUP BY YEAR(OrdHead.OrderDate)
+ORDER BY YEAR(OrdHead.OrderDate) 
+"
+$ExportExcelParams = @{
+    Path =  $ExcelFilePath 
+    WorksheetName = 'BeardsAreAwesome'
+    TableName = 'BeardsAreAwesome'
+    TableStyle = 'Dark1'
+    AutoSize =  $true
+    AutoFilter =  $true
+    MoveToStart =  $true
+    FreezeTopRow = $true
+    AutoNameRange = $true
+}
+
+$ChartDefinition = @{
+    Title = 'Beardy Chart of Total Sales By Year as a donut because he LOVES donuts' 
+    ChartType = 'Doughnut' 
+    XRange = 'Year'  
+    YRange = 'TotalSales'  
+    Column = 4
+    ShowPercent = $true
+}
+
+#Gather results
+$results = Invoke-DbaQuery -SqlInstance localhost -Database AdventureWorks2017 -Query $Query  |Select * -ExcludeProperty ItemArray, RowError, RowState, Table, HasErrors
+
+#export results to excel 
+$excel = $results | Export-Excel  @ExportExcelParams -PassThru
+
+Remove-Worksheet  -FullName $ExcelFilePath -WorksheetName 'Sheet1'
+#create chart defnition
+$chart = New-ExcelChartDefinition @ChartDefinition 
+# create and save excel
+Export-Excel -ExcelPackage $excel -ExcelChartDefinition $chart -WorksheetName 'BeardsAreAwesome' -Show
+WARNING: Could not find C:\temp\xlsx\DONUTSchartedquery.xlsx
+Pivot Tables
+Pivot tables are very popular with users also.
+
+You can create a pivot table in the same manner
+
+In [20]:
+$ExcelFilePath = 'C:\temp\xlsx\pivotedquery.xlsx' 
+
+$Query = "SELECT PROD.Name, 
+OrdHead.OrderDate ,
+Details.OrderQty
+FROM Sales.SalesOrderDetail AS Details
+INNER JOIN Production.Product AS PROD ON Details.ProductID = PROD.ProductID
+INNER JOIN Sales.SalesOrderHeader AS OrdHead ON Details.SalesOrderID = OrdHead.SalesOrderID"
+$results = Invoke-DbaQuery -SqlInstance localhost -Database AdventureWorks2017 -Query $Query  |Select * -ExcludeProperty ItemArray, RowError, RowState, Table, HasErrors
+
+$ExportExcelParams = @{
+    Path =  $ExcelFilePath
+    WorksheetName = 'BaseQuery'
+    TableName = 'BeardsAreAwesome'
+    TableStyle = 'Dark1'
+    AutoSize =  $true
+    AutoFilter =  $true
+    MoveToStart =  $true
+    FreezeTopRow = $true
+    Show = $true
+    PassThru = $true
+}
+
+$PivotTableParams = @{
+    PivotTableName = 'BeardyPivot' 
+    SourceWorkSheet = 'BaseQuery' 
+    PivotData = @{"OrderQty" = "Sum"} 
+    PivotRows = 'OrderDate' ,'Name'
+}
+
+$excel = $results | Export-Excel @ExportExcelParams 
+Remove-Worksheet  -FullName $ExcelFilePath -WorksheetName 'Sheet1'
+
+$PivotTable = New-PivotTableDefinition  @PivotTableParams
+
+Export-Excel -ExcelPackage $excel -PivotTableDefinition $PivotTable -Show
+WARNING: Could not find C:\temp\xlsx\pivotedquery.xlsx
+Wouldnt it be great if we had the "magic" date also
+
+In [21]:
+$ExcelFilePath =  'C:\temp\xlsx\pivoteddatedquery.xlsx'
+$ExportExcelParams = @{
+    Path = $ExcelFilePath
+    WorksheetName = 'BaseQuery'
+    TableName = 'BeardsAreAwesome'
+    TableStyle = 'Dark1'
+    AutoSize =  $true
+    AutoFilter =  $true
+    MoveToStart =  $true
+    FreezeTopRow = $true
+    Show = $true
+    PassThru = $true
+}
+
+$PivotTableParams = @{
+    PivotTableName = 'BeardyPivot' 
+    SourceWorkSheet = 'BaseQuery' 
+    PivotData = @{"OrderQty" = "Sum"} 
+    PivotRows = 'OrderDate' ,'Name'
+    GroupDateRow =  'OrderDate' 
+    GroupDatePart = 'Years', 'Months', 'Days' 
+    PivotTableStyle = 'Medium1' 
+}
+
+
+$excel = $results | Export-Excel @ExportExcelParams 
+
+$PivotTable = New-PivotTableDefinition @PivotTableParams
+Remove-Worksheet  -FullName $ExcelFilePath -WorksheetName 'Sheet1'
+
+Export-Excel -ExcelPackage $excel -PivotTableDefinition $PivotTable -Show
+WARNING: Could not find C:\temp\xlsx\pivoteddatedquery.xlsx
+and you can add a Pivot Chart also like this
+
+In [22]:
+$ExportExcelParams = @{
+    Path =  'C:\temp\xlsx\pivoteddatedchartedquery.xlsx' 
+    WorksheetName = 'BaseQuery'
+    TableName = 'BeardsAreAwesome'
+    TableStyle = 'Dark1'
+    AutoSize =  $true
+    AutoFilter =  $true
+    MoveToStart =  $true
+    FreezeTopRow = $true
+    Show = $true
+    PassThru = $true
+}
+
+$PivotTableParams = @{
+    PivotTableName = 'BeardyPivot' 
+    SourceWorkSheet = 'BaseQuery' 
+    PivotData = @{"OrderQty" = "Sum"} 
+    PivotRows = 'OrderDate' ,'Name'
+    GroupDateRow =  'OrderDate' 
+    GroupDatePart = 'Years', 'Months', 'Days' 
+    PivotTableStyle = 'Medium1' 
+    IncludePivotChart = $true
+    ChartTitle = 'BeardyChart' 
+    ChartType = 'ColumnClustered' 
+    ChartColumn = 6
+}
+
+
+$excel = $results | Export-Excel @ExportExcelParams 
+
+$PivotTable = New-PivotTableDefinition @PivotTableParams 
+
+Export-Excel -ExcelPackage $excel -PivotTableDefinition $PivotTable -Show
+Formatting
+Excel enables you to do custom formatting. ImportExcel does the same.
+
+Lets check permissions on an instance and colour code the results depending on the role membership
+
+In [23]:
+$ExcelDirectory = 'c:\temp\xlsx\' # Alter this to the directory you want the file created
+$SQlinstance = 'localhost'  # Alter this for the SQL Instance you want to get permissions for
+
+Write-Output "Processing $sqlinstance"
+
+$InstanceName = $SQlinstance.Split('\').Split('.').Split('\').Split(',') -join '_'
+$ExcelFile = $ExcelDirectory + '\' + $InstanceName + '_Permssions_OneTab_' + (Get-Date).ToString('yyyy-MM-dd') + '.xlsx'
+
+Write-Output "    FileName is $ExcelFile"
+
+$WorkSheetName = "Permissions"
+
+    $excel = Get-DbaUserPermission -SqlInstance $sqlinstance | Export-Excel -Path $ExcelFile -WorksheetName $WorkSheetName -AutoSize -FreezeTopRow -AutoFilter -PassThru
+  
+    $rulesparam = @{
+        Address   = $excel.Workbook.Worksheets[$WorkSheetName].Dimension.Address
+        WorkSheet = $excel.Workbook.Worksheets[$WorkSheetName] 
+        RuleType  = 'Expression'      
+    }
+
+    Add-ConditionalFormatting @rulesparam -ConditionValue 'NOT(ISERROR(FIND("sysadmin",$G1)))' -BackgroundColor Yellow -StopIfTrue
+    Add-ConditionalFormatting @rulesparam -ConditionValue 'NOT(ISERROR(FIND("db_owner",$G1)))' -BackgroundColor Yellow -StopIfTrue
+    Add-ConditionalFormatting @rulesparam -ConditionValue 'NOT(ISERROR(FIND("SERVER LOGINS",$E1)))' -BackgroundColor PaleGreen 
+    Add-ConditionalFormatting @rulesparam -ConditionValue 'NOT(ISERROR(FIND("SERVER SECURABLES",$E1)))' -BackgroundColor PowderBlue 
+    Add-ConditionalFormatting @rulesparam -ConditionValue 'NOT(ISERROR(FIND("DB ROLE MEMBERS",$E1)))' -BackgroundColor GoldenRod 
+    Add-ConditionalFormatting @rulesparam -ConditionValue 'NOT(ISERROR(FIND("DB SECURABLES",$E1)))' -BackgroundColor BurlyWood 
+
+    Close-ExcelPackage $excel
+
+
+Write-Output ""
+Write-Output "Finished Processing $sqlinstance"
+
+$Excel = Open-ExcelPackage -Path $ExcelFile
+Add-Worksheet -ExcelPackage $Excel -WorksheetName 'Title' -MoveToStart | Out-Null
+
+$TitleSheet = $excel.Workbook.Worksheets['Title']
+$Date = (Get-Date).ToLongDateString()
+$TitleSheet.Cells["A1"].value = "This Worksheet shows the User Permissions for each database on $sqlinstance at $Date "
+Set-ExcelRange -Worksheet $TitleSheet -Range "A:1" -Bold -FontSize 22 -Underline -UnderLineType Double
+
+$TitleSheet.Cells["B3"].Value = "The Cells are colour coded as follows :-"
+Set-ExcelRange -Worksheet $TitleSheet -Range "B3" -Bold -FontSize 18 
+$TitleSheet.Cells["E5"].Value = "The Yellow Cells show members of the sysadmin role who have permission to do and access anything on the instance "
+$TitleSheet.Cells["E6"].Value = "The Green Cells show the logins on the server"
+$TitleSheet.Cells["E7"].Value = "The Blue Cells show the instance level permissions that have been granted to the logins"
+$TitleSheet.Cells["E8"].Value = "The Orange Cells show the database role membership for the login"
+$TitleSheet.Cells["E9"].Value = "The Brown Cells show specific database permissions that have been granted for the logins"
+
+$TitleSheet.Cells["B11"].Value = "You can filter by Database on the Object column"
+Set-ExcelRange -Worksheet $TitleSheet -Range "C11" -FontSize 18
+
+$TitleSheet.Cells["B12"].Value = "You can filter by User/Group/Login on the Member column"
+Set-ExcelRange -Worksheet $TitleSheet -Range "C12" -FontSize 18
+
+Set-ExcelRange -Worksheet $TitleSheet -Range  "C5" -BackgroundColor Yellow
+Set-ExcelRange -Worksheet $TitleSheet -Range  "C6" -BackgroundColor PaleGreen
+Set-ExcelRange -Worksheet $TitleSheet -Range  "C7" -BackgroundColor PowderBlue 
+Set-ExcelRange -Worksheet $TitleSheet -Range  "C8" -BackgroundColor GoldenRod 
+Set-ExcelRange -Worksheet $TitleSheet -Range  "C9" -BackgroundColor BurlyWood 
+
+Close-ExcelPackage $excel
+
+
+Write-Output "                ###############                  "
+Write-Output "        FileName is $ExcelFile            "
+Write-Output "                ###############                  "
+Write-Output ""
+
+Invoke-Item $ExcelFile
+. {
+>> $ExcelDirectory = 'c:\temp\xlsx\' # Alter this to the directory you want the file created
+>> $SQlinstance = 'localhost'  # Alter this for the SQL Instance you want to get permissions for
+>> 
+>> Write-Output "Processing $sqlinstance"
+>> 
+>> $InstanceName = $SQlinstance.Split('\').Split('.').Split('\').Split(',') -join '_'
+>> $ExcelFile = $ExcelDirectory + '\' + $InstanceName + '_Permssions_OneTab_' + (Get-Date).ToString('yyyy-MM-dd') + '.xlsx'
+>> 
+>> Write-Output "    FileName is $ExcelFile"
+>> 
+>> $WorkSheetName = "Permissions"
+>> 
+>>     $excel = Get-DbaUserPermission -SqlInstance $sqlinstance | Export-Excel -Path $ExcelFile -WorksheetName $WorkSheetName -AutoSize -FreezeTopRow -AutoFilter -PassThru
+>>   
+>>     $rulesparam = @{
+>>         Address   = $excel.Workbook.Worksheets[$WorkSheetName].Dimension.Address
+>>         WorkSheet = $excel.Workbook.Worksheets[$WorkSheetName] 
+>>         RuleType  = 'Expression'      
+>>     }
+>> 
+>>     Add-ConditionalFormatting @rulesparam -ConditionValue 'NOT(ISERROR(FIND("sysadmin",$G1)))' -BackgroundColor Yellow -StopIfTrue
+>>     Add-ConditionalFormatting @rulesparam -ConditionValue 'NOT(ISERROR(FIND("db_owner",$G1)))' -BackgroundColor Yellow -StopIfTrue
+>>     Add-ConditionalFormatting @rulesparam -ConditionValue 'NOT(ISERROR(FIND("SERVER LOGINS",$E1)))' -BackgroundColor PaleGreen 
+>>     Add-ConditionalFormatting @rulesparam -ConditionValue 'NOT(ISERROR(FIND("SERVER SECURABLES",$E1)))' -BackgroundColor PowderBlue 
+>>     Add-ConditionalFormatting @rulesparam -ConditionValue 'NOT(ISERROR(FIND("DB ROLE MEMBERS",$E1)))' -BackgroundColor GoldenRod 
+>>     Add-ConditionalFormatting @rulesparam -ConditionValue 'NOT(ISERROR(FIND("DB SECURABLES",$E1)))' -BackgroundColor BurlyWood 
+>> 
+>>     Close-ExcelPackage $excel
+>> 
+>> 
+>> Write-Output ""
+>> Write-Output "Finished Processing $sqlinstance"
+>> 
+>> $Excel = Open-ExcelPackage -Path $ExcelFile
+>> Add-Worksheet -ExcelPackage $Excel -WorksheetName 'Title' -MoveToStart | Out-Null
+>> 
+>> $TitleSheet = $excel.Workbook.Worksheets['Title']
+>> $Date = (Get-Date).ToLongDateString()
+>> $TitleSheet.Cells["A1"].value = "This Worksheet shows the User Permissions for each database on $sqlinstance at $Date "
+>> Set-ExcelRange -Worksheet $TitleSheet -Range "A:1" -Bold -FontSize 22 -Underline -UnderLineType Double
+>> 
+>> $TitleSheet.Cells["B3"].Value = "The Cells are colour coded as follows :-"
+>> Set-ExcelRange -Worksheet $TitleSheet -Range "B3" -Bold -FontSize 18 
+>> $TitleSheet.Cells["E5"].Value = "The Yellow Cells show members of the sysadmin role who have permission to do and access anything on the instance "
+>> $TitleSheet.Cells["E6"].Value = "The Green Cells show the logins on the server"
+>> $TitleSheet.Cells["E7"].Value = "The Blue Cells show the instance level permissions that have been granted to the logins"
+>> $TitleSheet.Cells["E8"].Value = "The Orange Cells show the database role membership for the login"
+>> $TitleSheet.Cells["E9"].Value = "The Brown Cells show specific database permissions that have been granted for the logins"
+>> 
+>> $TitleSheet.Cells["B11"].Value = "You can filter by Database on the Object column"
+>> Set-ExcelRange -Worksheet $TitleSheet -Range "C11" -FontSize 18
+>> 
+>> $TitleSheet.Cells["B12"].Value = "You can filter by User/Group/Login on the Member column"
+>> Set-ExcelRange -Worksheet $TitleSheet -Range "C12" -FontSize 18
+>> 
+>> Set-ExcelRange -Worksheet $TitleSheet -Range  "C5" -BackgroundColor Yellow
+>> Set-ExcelRange -Worksheet $TitleSheet -Range  "C6" -BackgroundColor PaleGreen
+>> Set-ExcelRange -Worksheet $TitleSheet -Range  "C7" -BackgroundColor PowderBlue 
+>> Set-ExcelRange -Worksheet $TitleSheet -Range  "C8" -BackgroundColor GoldenRod 
+>> Set-ExcelRange -Worksheet $TitleSheet -Range  "C9" -BackgroundColor BurlyWood 
+>> 
+>> Close-ExcelPackage $excel
+>> 
+>> 
+>> Write-Output "                ###############                  "
+>> Write-Output "        FileName is $ExcelFile            "
+>> Write-Output "                ###############                  "
+>> Write-Output ""
+>> 
+>> Invoke-Item $ExcelFile
+>> }
+>> 
+Processing localhost
+    FileName is c:\temp\xlsx\\localhost_Permssions_OneTab_2021-02-20.xlsx
+
+Finished Processing localhost
+                ###############                  
+        FileName is c:\temp\xlsx\\localhost_Permssions_OneTab_2021-02-20.xlsx            
+                ###############                  
