@@ -1,0 +1,228 @@
+$modules = 'ImportExcel'
+foreach($module in $modules){
+    if(Get-Module $module -ListAvailable -ErrorAction SilentlyContinue){
+        Write-Output "We will update the module $module"
+        Update-Module $module
+    } else {
+        Write-Output "We will install the module $module"
+        Install-Module $module -Scope CurrentUser
+    }
+}
+Get-Command -Module ImportExcel
+#Print all module conectet with Excel
+$GetModuke = Get-Command -Module ImportExcel
+Write-Host $GetModuke
+$GetModuke | Export-Excel -Path C:\temp\Login2.xlsx -AutoSize
+Invoke-Item C:\temp\Login2.xlsx
+#Print all service work 
+
+$data = Get-Service | Select Status,Name,DisplayName,StartType
+Write-Host $data
+$data | Export-Excel -Path C:\temp\Login.xlsx -AutoSize -AutoFilter
+
+Invoke-Item C:\temp\Login.xlsx
+
+# Export data to Excel and change file name and sheets name to 
+$data = Get-Service | Select Status,Name,DisplayName,StartType
+
+$data | Export-Excel -Path C:\temp\Login3.xlsx -AutoSize -AutoFilter -Title "SuperNova" -WorksheetName "Login" -Show
+# Work with existing file , add some new properti
+$ExportExcelParams = @{
+    Path = 'C:\temp\Login3.xlsx'
+    AutoSize = $true
+    AutoFilter = $true
+    Title = "The Legion $Env:ComputerName"
+    WorksheetName = "Logins"
+    MoveToStart = $true
+    TitleBackgroundColor = "blue"
+    #FreezeTopRow =$true
+    FreezePane = 3,0
+    Show = $true
+}
+
+$data | Export-Excel @ExportExcelParams
+
+#Work with existing file , add some new properti . Open multifile excel
+$ExportExcelParams = @{
+    Path = 'C:\temp\IbentLogin.xlsx'
+    AutoSize = $true
+    AutoFilter = $true
+    Title = "The Legion $Env:ComputerName"
+    #WorksheetName = "Logins"
+    MoveToStart = $true
+    TitleBackgroundColor = "darkgray"
+    #FreezeTopRow =$true
+    FreezePane = 3,0
+    #Show = $true
+}
+
+Get-WinEvent -LogName System -MaxEvents 100 | Export-Excel @ExportExcelParams -WorksheetName "System"
+Get-WinEvent -LogName  Application -MaxEvents 100 | Export-Excel @ExportExcelParams -WorksheetName "Application" -Show
+# Enter a data how and where file will be to save
+$sqlIns = 'Przemciowe'
+$Data = Get-Date -Format yyyyMMdd
+$Directory = 'C:\temp\xlsx\'
+$ExcelFile = $Directory + $Data + '_JakisTxt_' + $sqlIns + '.xlsx'
+# Enter a workbook paramiteres
+$ExportExcelParams = @{
+    Path = $ExcelFile
+    AutoSize = $true
+    AutoFilter = $true
+    TableName = 'PT'
+    TableStyle = 'Dark1'
+    #Title = "The Legion $Env:ComputerName"
+    #WorksheetName = "Logins"
+    MoveToStart = $true
+    TitleBackgroundColor = "darkgray"
+    FreezeTopRow =$true
+    #FreezePane = 3,0
+    #Show = $true
+}
+# Chose a input data and , witth paramiter we choose to import data
+Get-WinEvent -LogName System -MaxEvents 100 | Export-Excel @ExportExcelParams -WorksheetName "System"
+Get-WinEvent -LogName  Application -MaxEvents 100 | Export-Excel @ExportExcelParams -WorksheetName "Application" 
+Get-Service | Export-Excel @ExportExcelParams -WorksheetName "Services"
+#New Excel setup
+$Excel = Open-ExcelPackage -Path $ExcelFile
+Write-Output $Excel
+#Add new Sheets
+Add-Worksheet -ExcelPackage $Excel -WorksheetName 'Title' -MoveToStart | Out-Null
+
+$TitlSheet = $excel.Workbook.Worksheets['Title']
+
+$Data = (Get-Date).ToLongDateString()
+$TitlSheet.Cells["A1"].value = "$Data "
+$TitlSheet.Cells["D2"].value = "This workbook for $sqlIns "
+$TitlSheet.Cells["H3"].value = "Show the "
+$TitlSheet.Cells["H4"].value = "System Event "
+$TitlSheet.Cells["H5"].value = "Application event log "
+$TitlSheet.Cells["H6"].value = "Services "
+$TitlSheet.Cells["H7"].value = "and the SQL "
+Set-ExcelRange -Worksheet $TitlSheet -Range "A:1" -Bold -FontSize 26 -Underline -UnderLineType Double
+
+Close-ExcelPackage $excel
+
+Write-Output "          ########        "
+Write-Output "  File is $ExcelFile        "
+Write-Output "          ########        "
+
+Invoke-Item $ExcelFile
+# Chart definition /ExportExcelParams
+$Chartdefinition = @{
+    Title = 'WykresPrzemcia'
+    ChartType = 'Doughnut'
+    XRange = 'Year'
+    YRange = 'TotalSale'
+    Column = 4
+    NotLegend = $true
+    
+}
+# how to add
+#Export results to excel
+$Excel | Export-Exce @ExportExcelParams - PassThru
+#Create chart definition
+$chart = New-ExcelChartDefinition @Chartdefinition
+#create chart and save
+Export-Excel -ExcelPackage $Excal -ExcelChartDefinition @chart -WorksheetName 'NowyWykres' -Show
+#PivotTable
+$ExcelFilePath = 'C:\temp\Login.xlsx'
+$ExportExcelParams = @{
+    Path = $ExcelFilePath
+    WorksheetName = "New1"
+    AutoSize = $true
+    AutoFilter = $true
+    TableName = 'PT'
+    TableStyle = 'Dark1'
+    #Title = "The Legion $Env:ComputerName"
+    #WorksheetName = "Logins"
+    MoveToStart = $true
+    TitleBackgroundColor = "darkgray"
+    FreezeTopRow =$true
+    #FreezePane = 3,0
+    Show = $true
+    PassThru = $true
+}
+$PivotTableParms = @{
+    PivotTableName = "PI"
+    SourceWorkSheet = 'New1'
+    PivotData = @{"OrderQty" = "Sum"}
+    PivotRows = 'OrderData','Name'
+    GroupDataRow = 'OrderData'
+    GroupDataPart = 'Years','Months','Days'
+    PivotTableStyle = 'Medium1'
+}
+$AddINPUT | Export-Excel @ExportExcelParams
+$PivotTable = New-PivotTableDefinition @PivotTableParms
+Export-Excel -ExcelPackage $AddINPUT PivotTableDefinition $PivotTable -Show
+
+#Formating excel
+$ExcelDirectory = 'c:\temp\xlsx\' # Alter this to the directory you want the file created
+$SQlinstance = 'localhost'  # Alter this for the SQL Instance you want to get permissions for
+
+Write-Output "Processing $sqlinstance"
+
+$InstanceName = $SQlinstance.Split('\').Split('.').Split('\').Split(',') -join '_'
+$ExcelFile = $ExcelDirectory + '\' + $InstanceName + '_Permssions_OneTab_' + (Get-Date).ToString('yyyy-MM-dd') + '.xlsx'
+
+Write-Output "    FileName is $ExcelFile"
+
+$WorkSheetName = "Permissions"
+
+    $excel = Get-DbaUserPermission -SqlInstance $sqlinstance | Export-Excel -Path $ExcelFile -WorksheetName $WorkSheetName -AutoSize -FreezeTopRow -AutoFilter -PassThru
+  
+    $rulesparam = @{
+        Address   = $excel.Workbook.Worksheets[$WorkSheetName].Dimension.Address
+        WorkSheet = $excel.Workbook.Worksheets[$WorkSheetName] 
+        RuleType  = 'Expression'      
+    }
+
+    Add-ConditionalFormatting @rulesparam -ConditionValue 'NOT(ISERROR(FIND("sysadmin",$G1)))' -BackgroundColor Yellow -StopIfTrue
+    Add-ConditionalFormatting @rulesparam -ConditionValue 'NOT(ISERROR(FIND("db_owner",$G1)))' -BackgroundColor Yellow -StopIfTrue
+    Add-ConditionalFormatting @rulesparam -ConditionValue 'NOT(ISERROR(FIND("SERVER LOGINS",$E1)))' -BackgroundColor PaleGreen 
+    Add-ConditionalFormatting @rulesparam -ConditionValue 'NOT(ISERROR(FIND("SERVER SECURABLES",$E1)))' -BackgroundColor PowderBlue 
+    Add-ConditionalFormatting @rulesparam -ConditionValue 'NOT(ISERROR(FIND("DB ROLE MEMBERS",$E1)))' -BackgroundColor GoldenRod 
+    Add-ConditionalFormatting @rulesparam -ConditionValue 'NOT(ISERROR(FIND("DB SECURABLES",$E1)))' -BackgroundColor BurlyWood 
+
+    Close-ExcelPackage $excel
+
+
+Write-Output ""
+Write-Output "Finished Processing $sqlinstance"
+
+$Excel = Open-ExcelPackage -Path $ExcelFile
+Add-Worksheet -ExcelPackage $Excel -WorksheetName 'Title' -MoveToStart | Out-Null
+
+$TitleSheet = $excel.Workbook.Worksheets['Title']
+$Date = (Get-Date).ToLongDateString()
+$TitleSheet.Cells["A1"].value = "This Worksheet shows the User Permissions for each database on $sqlinstance at $Date "
+Set-ExcelRange -Worksheet $TitleSheet -Range "A:1" -Bold -FontSize 22 -Underline -UnderLineType Double
+
+$TitleSheet.Cells["B3"].Value = "The Cells are colour coded as follows :-"
+Set-ExcelRange -Worksheet $TitleSheet -Range "B3" -Bold -FontSize 18 
+$TitleSheet.Cells["E5"].Value = "The Yellow Cells show members of the sysadmin role who have permission to do and access anything on the instance "
+$TitleSheet.Cells["E6"].Value = "The Green Cells show the logins on the server"
+$TitleSheet.Cells["E7"].Value = "The Blue Cells show the instance level permissions that have been granted to the logins"
+$TitleSheet.Cells["E8"].Value = "The Orange Cells show the database role membership for the login"
+$TitleSheet.Cells["E9"].Value = "The Brown Cells show specific database permissions that have been granted for the logins"
+
+$TitleSheet.Cells["B11"].Value = "You can filter by Database on the Object column"
+Set-ExcelRange -Worksheet $TitleSheet -Range "C11" -FontSize 18
+
+$TitleSheet.Cells["B12"].Value = "You can filter by User/Group/Login on the Member column"
+Set-ExcelRange -Worksheet $TitleSheet -Range "C12" -FontSize 18
+
+Set-ExcelRange -Worksheet $TitleSheet -Range  "C5" -BackgroundColor Yellow
+Set-ExcelRange -Worksheet $TitleSheet -Range  "C6" -BackgroundColor PaleGreen
+Set-ExcelRange -Worksheet $TitleSheet -Range  "C7" -BackgroundColor PowderBlue 
+Set-ExcelRange -Worksheet $TitleSheet -Range  "C8" -BackgroundColor GoldenRod 
+Set-ExcelRange -Worksheet $TitleSheet -Range  "C9" -BackgroundColor BurlyWood 
+
+Close-ExcelPackage $excel
+
+
+Write-Output "                ###############                  "
+Write-Output "        FileName is $ExcelFile            "
+Write-Output "                ###############                  "
+Write-Output ""
+
+Invoke-Item $ExcelFile
