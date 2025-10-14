@@ -1,0 +1,17 @@
+# PowerShell
+*.ps1xml
+*.psd1
+*.psm1
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# System
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
